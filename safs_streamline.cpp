@@ -35,7 +35,6 @@ int StreamlineWorker::process ( )
   }
 
   // Create a SAFS request for each element.
-  
 
   // Delete the qelement
   delete (qel);

@@ -36,8 +36,13 @@ void IOQueue::printioq ( )
   while ( not ioq.empty() )
   {
     elp = ioq.front();
-    std::cout << std::get<0>(elp->seed) << ", " <<  std::get<1>(elp->seed) <<  ", " << std::get<2>(elp->seed) <<
-       elp->files[0] << elp->files[1] << elp->files[2] << std::endl;
+    std::cout << std::get<0>(elp->seed) << ", " <<  std::get<1>(elp->seed) <<  ", " << std::get<2>(elp->seed);
+    for (int i=0; i<elp->files.size(); i++)
+    {
+       std::cout << ", " << elp->files[i];
+    }
+    std::cout << std::endl;
+
     ioq.pop();
   } 
 }

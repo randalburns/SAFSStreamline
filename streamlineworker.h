@@ -36,22 +36,25 @@ class StreamlineWorker {
       std::vector<unsigned char*> buffers;
     };
 
-    static const int IODEPTH = 64;
+//    static const int IODEPTH = 64;
+    static const int IODEPTH = 8;
 
   private: 
 
       int ioslot;
       IOQueue& ioq;
+      std::vector<char> iostatus;
 
       // output queue -- lists of buffers
-      std::array<workitem,IODEPTH> worker;
+      std::vector<workitem> worker;
 
   public: 
 
     StreamlineWorker ( IOQueue& ioqref );
 
+    // Start IODEPTH number of workers
     // Dequeue an I/O, send to FlashGraph, set up callbacks.
-    int process ( );
+    void process ( );
 };
 
 #endif

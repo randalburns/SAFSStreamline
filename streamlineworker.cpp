@@ -1,5 +1,5 @@
 #include "ioqueue.h"
-#include "safs_streamline.h"
+#include "streamlineworker.h"
 
 // class SAFSStreamline
 //
@@ -8,38 +8,49 @@
 //
 // Once all files are read, it invokes the callback and returns a list of buffers.
 
-
 StreamlineWorker::StreamlineWorker ( IOQueue& ioqref ):
-  ioslot(0), ioq(ioqref)
+  ioq(ioqref), iostatus(IODEPTH, 0), worker(IODEPTH)
 {};
 
 // Dequeue an I/O, send to FlashGraph, set up callbacks.
-int StreamlineWorker::process ( )
+void StreamlineWorker::process ( )
 {
-  IOQueue::ioqel* qel = ioq.dequeue();
 
-  if ( qel == NULL )
+  IOQueue::ioqel* qel;
+
+  for (int i=0; i<IODEPTH; i++)
   {
-    return 0;
+    // start IO on all open slots
+    if (iostatus[i] == 0)
+    {
+
+      qel = ioq.dequeue();
+
+      if ( qel == NULL )
+      {
+        return;
+      }
+
+      // convert into a workitem 
+      StreamlineWorker::workitem* wi = new workitem();
+      wi->ioslot = ioslot;
+      wi->length = (qel->files).size();
+      wi->seed = qel->seed;
+      wi->files = qel->files;
+      for ( int i=0; i<wi->length; i++ )
+      {
+        wi->buffers.push_back(NULL);
+      }
+
+      // Create a SAFS request for each element.
+      iostatus[i] = 1;
+
+      // Delete the qelement
+      delete (qel);
+
+    }
   }
-
-  // convert into a workitem 
-  StreamlineWorker::workitem* wi = new workitem();
-  wi->ioslot = ioslot;
-  wi->length = (qel->files).size();
-  wi->seed = qel->seed;
-  wi->files = qel->files;
-  for ( int i=0; i<wi->length; i++ )
-  {
-    wi->buffers[i] = NULL;
-  }
-
-  // Create a SAFS request for each element.
-
-  // Delete the qelement
-  delete (qel);
-
-  return 1;
+  return ;
 }
 
 /*
@@ -84,6 +95,7 @@ int StreamlineWorker::process ( )
  */
 
 
+/*
 int main ( )
 {
   IOQueue ioq; 
@@ -127,4 +139,3 @@ int main ( )
         strncpy ( buf, s.c_str(), s.length() );
         (wi->buffers).push_back((unsigned char *)buf);
 */
-}

@@ -18,7 +18,7 @@ int main ()
   //  initialize the SAFS system
   config_map::ptr safs_configs = config_map::create("/safs/local.txt");
   init_io_system(safs_configs);
-//  file_io_factory::shared_ptr factory = create_io_factory("ssfile",REMOTE_ACCESS);
+  file_io_factory::shared_ptr factory = create_io_factory("ssfile",REMOTE_ACCESS);
   
 
   //Create 1000 seeds and queue them up for I/O

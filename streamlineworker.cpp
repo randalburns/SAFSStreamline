@@ -19,52 +19,88 @@ StreamlineWorker::StreamlineWorker ( IOQueue& ioqref ):
 // Dequeue an I/O, send to FlashGraph, set up callbacks.
 void StreamlineWorker::process ( )
 {
-
   IOQueue::ioqel* qel;
+  
+  // Loop until no more I/Os
+  do {
 
-  for (int i=0; i<IODEPTH; i++)
-  {
-    // start IO on all open slots
-    if (iostatus[i] == 0)
+    for (int ioslot=0; ioslot<IODEPTH; ioslot++)
     {
-
-      qel = ioq.dequeue();
-
-      if ( qel == NULL )
+      // start IO on all open slots
+      if (iostatus[ioslot] == 0)
       {
-        return;
+        qel = ioq.dequeue();
+
+        if ( qel == NULL )
+        {
+          break;  //RB this breaks the for loop?
+        }
+
+        // convert into a workitem 
+        StreamlineWorker::workitem* wi = new workitem();
+        wi->streamline = qel->streamline;
+        wi->ioslot = ioslot;
+        wi->seed = qel->seed;
+        wi->ranges = qel->ranges;
+        for ( unsigned int i=0; i<wi->ranges.size(); i++ )
+        {
+          wi->buffers.push_back(NULL);
+        }
+
+        // add the workitem to the workers
+        workers[ioslot] = wi;
+
+        // Update i/o status
+        iostatus[ioslot] = 1;
+
+        // create the SAFS requests
+
+        // Delete the qelement
+        delete (qel);
       }
+    } //endfor -- 
+    
+    printworkers();
+ 
+    assert(0);
+    // wait on I/O when an I/O is complete, restart the do loop
 
-      // convert into a workitem 
-      StreamlineWorker::workitem* wi = new workitem();
-      wi->ioslot = ioslot;
-      wi->length = (qel->ranges).size();
-      wi->seed = qel->seed;
-      wi->ranges = qel->ranges;
-      for ( int i=0; i<wi->length; i++ )
-      {
-        wi->buffers.push_back(NULL);
-      }
-
-      // add the workitem to the workers
-      workers[ioslot] = wi;
-
-      // Create a SAFS request for each element.
-      iostatus[i] = 1;
-
-      // create the SAFS requests
-
-      // Delete the qelement
-      delete (qel);
-    }
   }
-  return ;
+  while ( qel != NULL );
+
+  return;
 }
+
+//testing 
+void StreamlineWorker::printworkers ( )
+{
+  StreamlineWorker::workitem* wp;
+ 
+  for (unsigned int i=0; i<workers.size(); i++)
+  { 
+    wp = workers[i];
+    std::cout << "Streamline " << wp->streamline << ", IOSlot " << wp->ioslot << ", Seed " << std::get<0>(wp->seed) << ", " <<  std::get<1>(wp->seed) <<  ", " << std::get<2>(wp->seed) << ", Ranges ";
+    for (unsigned int j=0; j<wp->ranges.size(); j++)
+    {
+       std::cout << ", " << std::get<0>(wp->ranges[j]) << ", "
+                 << std::get<1>(wp->ranges[j]) << ", " 
+                 << std::get<2>(wp->ranges[j]) << ", "
+                 << std::get<3>(wp->ranges[j]) << ", " 
+                 << std::get<4>(wp->ranges[j]) << ", "
+                 << std::get<5>(wp->ranges[j]) << ", " 
+                 << std::get<6>(wp->ranges[j]);
+    }
+    std::cout << std::endl;
+  } 
+}
+
+
 
 // SAFS callback function
 int SSCallback::handleIO ( io_request *reqs[], int num )
 {
   assert(0);
+
 /*  //RBTODO
   if ( moreio for workerel ) 
   {
@@ -85,6 +121,7 @@ int SSCallback::handleIO ( io_request *reqs[], int num )
   }
 */
 }
+
 
 /*
     // Return a seed and data for which I/O is finished.
@@ -110,65 +147,4 @@ int SSCallback::handleIO ( io_request *reqs[], int num )
       }
       delete ( wi );
     }
-
-
-// testing
-
-
-    void printwi ( workitem* wi )
-    {
-      std::cout << "length " << wi->length <<", seed " <<  std::get<0>(wi->seed) << ", " <<  std::get<1>(wi->seed) <<  ", " << std::get<2>(wi->seed);
-      for (int i=0; i<wi->length; i++)
-      {
-        std::cout << "\nBuffer = " << wi->buffers[i];
-      }
-      std::cout << std::endl;
-    }
-};
- */
-
-
-/*
-int main ( )
-{
-  IOQueue ioq; 
-
-  std::tuple<double,double,double> seed0 { 0.23, 0.34, 0.45 };
-  std::tuple<double,double,double> seed1 { 1.23, 1.34, 1.45 };
-  std::tuple<double,double,double> seed2 { 2.23, 2.34, 2.45 };
-  const char * filesp[] = { "file1", "file2", "file3", "file4" };
-  std::vector<std::string> files (filesp, std::end(filesp));
-
-  ioq.enqueue( seed0, files );
-  ioq.enqueue( seed1, files );
-  ioq.enqueue( seed2, files );
-  ioq.printioq();
-
-  ioq.enqueue( seed0, files );
-  ioq.enqueue( seed1, files );
-  ioq.enqueue( seed2, files );
-
-  IOQueue::ioqel* qel = ioq.dequeue();
-  while ( qel != NULL )
-  {
-    std::cout << "Dequeued an element." << std::endl;
-    qel = ioq.dequeue();
-  };
-/*
-  workitem * wi = ss.dequeue ();
-  while ( wi != NULL )
-  {
-    ss.printwi ( wi );
-    ss.complete ( wi );
-    wi = ss.dequeue ();
-  }
-*/
-
-
-/*
-        os  << "buffer" << qel->files[i] << "." << i;
-        std::string s = os.str();
-        char* buf = (char*) malloc ( sizeof(char) * s.length() );
-        strncpy ( buf, s.c_str(), s.length() );
-        (wi->buffers).push_back((unsigned char *)buf);
 */

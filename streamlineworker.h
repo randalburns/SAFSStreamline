@@ -22,18 +22,16 @@ using namespace safs;
 //
 // Once all files are read, it invokes the callback and returns a list of buffers.
 
-
 class StreamlineWorker {
 
   public:
 
     struct workitem
     { 
-//      int streamline_id;
+      int streamline;
       int ioslot;
-      int length;
       std::tuple<float,float,float> seed;
-      std::vector<std::tuple<std::string,int,int>> ranges;
+      std::vector<std::tuple<std::string,int,int,int,int,int,int>> ranges;
       std::vector<unsigned char*> buffers;
     };
 
@@ -49,10 +47,6 @@ class StreamlineWorker {
       // output queue -- lists of buffers
       std::vector<workitem*> workers;
 
-      // IO callback
-    
-     
-
   public: 
 
     StreamlineWorker ( IOQueue& ioqref );
@@ -61,6 +55,9 @@ class StreamlineWorker {
     // Dequeue an I/O, send to FlashGraph, set up callbacks.
     void process ( );
 
+    // testing
+    void printworkers();
+
 };
 
 class SSCallback : public callback
@@ -68,15 +65,5 @@ class SSCallback : public callback
   public: 
     virtual int handleIO ( io_request *reqs[], int num );
 };
-
-    struct streamIOcomplete
-    { 
-      int streamline_id;
-      int length;
-      std::tuple<float,float,float> seed;
-      std::vector<int> buflengths;
-      std::vector<unsigned char*> buffers;
-      int return_code;
-    };
 
 #endif

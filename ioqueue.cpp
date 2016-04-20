@@ -38,7 +38,7 @@ void IOQueue::printioq ( )
   {
     elp = ioq.front();
     std::cout << "Streamline " << elp->streamline << ", Seed " << std::get<0>(elp->seed) << ", " <<  std::get<1>(elp->seed) <<  ", " << std::get<2>(elp->seed) << ", Ranges ";
-    for (int i=0; i<elp->ranges.size(); i++)
+    for (unsigned int i=0; i<elp->ranges.size(); i++)
     {
        std::cout << ", " << std::get<0>(elp->ranges[i]) << ", "
                  << std::get<1>(elp->ranges[i]) << ", " 

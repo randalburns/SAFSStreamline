@@ -41,12 +41,10 @@ int main ()
   }
 
   // Look at the queue.  This is destructive
-  ioq.printioq();
-
-  return 0;
+  // ioq.printioq();
 
   // create parallel threads
-  #pragma omp parallel
+  // #pragma omp parallel
   {
     // Create a streamline worker
     StreamlineWorker sw ( ioq );

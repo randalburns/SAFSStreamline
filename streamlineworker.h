@@ -1,7 +1,5 @@
-
 #ifndef h_safs_streamline
 #define h_safs_streamline
-
 
 #include<stdio.h>
 #include<string.h>
@@ -14,6 +12,8 @@
 
 #include "ioqueue.h"
 
+#include "io_interface.h"
+using namespace safs;
 
 // class SAFSStreamline
 //
@@ -29,6 +29,7 @@ class StreamlineWorker {
 
     struct workitem
     { 
+//      int streamline_id;
       int ioslot;
       int length;
       std::tuple<float,float,float> seed;
@@ -46,7 +47,11 @@ class StreamlineWorker {
       std::vector<char> iostatus;
 
       // output queue -- lists of buffers
-      std::vector<workitem> worker;
+      std::vector<workitem*> workers;
+
+      // IO callback
+    
+     
 
   public: 
 
@@ -55,6 +60,23 @@ class StreamlineWorker {
     // Start IODEPTH number of workers
     // Dequeue an I/O, send to FlashGraph, set up callbacks.
     void process ( );
+
 };
+
+class SSCallback : public callback
+{
+  public: 
+    virtual int handleIO ( io_request *reqs[], int num );
+};
+
+    struct streamIOcomplete
+    { 
+      int streamline_id;
+      int length;
+      std::tuple<float,float,float> seed;
+      std::vector<int> buflengths;
+      std::vector<unsigned char*> buffers;
+      int return_code;
+    };
 
 #endif

@@ -15,13 +15,14 @@ void IOQueue::enqueue ( std::tuple<float,float,float> seed, std::vector<std::str
 // remove an item from the IO queue
 IOQueue::ioqel* IOQueue::dequeue ( )
 {
+  q_mtx.lock();
   // Don't protect.  If there's no works. there's no work.
   if (ioq.empty())
   {
+    q_mtx.unlock();
     return NULL;
   }
   //dequeue from ioq
-  q_mtx.lock();
   IOQueue::ioqel* qel = ioq.front();
   ioq.pop();
   q_mtx.unlock();

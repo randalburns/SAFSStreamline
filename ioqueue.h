@@ -1,4 +1,3 @@
-
 #ifndef ioqueue_h
 #define ioqueue_h
 
@@ -17,8 +16,11 @@ class IOQueue {
   public:
     // elements in the IO queue -- this is arbitrarilty large and shared by all threads
     struct ioqel {
+//      int streamline_id;
       std::tuple<double,double,double> seed;
       std::vector<std::string> files;
+      // filename in safs, offset, length
+//      std::vector<std::tuple<string,int,int>> fileioranges;
     };
 
   private:

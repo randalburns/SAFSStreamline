@@ -1,6 +1,9 @@
 #include "ioqueue.h"
 #include "streamlineworker.h"
 
+#include "io_interface.h"
+using namespace safs;
+
 // class SAFSStreamline
 //
 // Takes request in the form of lists of files (maintaining an input queue)
@@ -9,8 +12,9 @@
 // Once all files are read, it invokes the callback and returns a list of buffers.
 
 StreamlineWorker::StreamlineWorker ( IOQueue& ioqref ):
-  ioq(ioqref), iostatus(IODEPTH, 0), worker(IODEPTH)
-{};
+  ioq(ioqref), iostatus(IODEPTH, 0), workers(IODEPTH)
+{
+};
 
 // Dequeue an I/O, send to FlashGraph, set up callbacks.
 void StreamlineWorker::process ( )
@@ -42,15 +46,44 @@ void StreamlineWorker::process ( )
         wi->buffers.push_back(NULL);
       }
 
+      // add the workitem to the workers
+      workers[ioslot] = wi;
+
       // Create a SAFS request for each element.
       iostatus[i] = 1;
 
+      // create the SAFS requests
+
       // Delete the qelement
       delete (qel);
-
     }
   }
   return ;
+}
+
+// SAFS callback function
+int SSCallback::handleIO ( io_request *reqs[], int num )
+{
+  assert(0);
+/*  //RBTODO
+  if ( moreio for workerel ) 
+  {
+     wait longer
+     return 0;
+  } else {
+    // Call JP's streamline integration
+    //     with a IOcompletion structure
+    //  JP returns a new seed and new list of files
+    if ( return_code == morework )
+    {
+      // enqueue new IO
+    }
+    else
+    {
+      streamline done.
+    }
+  }
+*/
 }
 
 /*

@@ -38,9 +38,9 @@ void StreamlineWorker::process ( )
       // convert into a workitem 
       StreamlineWorker::workitem* wi = new workitem();
       wi->ioslot = ioslot;
-      wi->length = (qel->files).size();
+      wi->length = (qel->ranges).size();
       wi->seed = qel->seed;
-      wi->files = qel->files;
+      wi->ranges = qel->ranges;
       for ( int i=0; i<wi->length; i++ )
       {
         wi->buffers.push_back(NULL);

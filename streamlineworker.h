@@ -33,7 +33,7 @@ class StreamlineWorker {
       int ioslot;
       int length;
       std::tuple<float,float,float> seed;
-      std::vector<std::string> files;
+      std::vector<std::tuple<std::string,int,int>> ranges;
       std::vector<unsigned char*> buffers;
     };
 

@@ -16,11 +16,12 @@ class IOQueue {
   public:
     // elements in the IO queue -- this is arbitrarilty large and shared by all threads
     struct ioqel {
-//      int streamline_id;
+      int streamline;
       std::tuple<double,double,double> seed;
-      std::vector<std::string> files;
-      // filename in safs, offset, length
-//      std::vector<std::tuple<string,int,int>> fileioranges;
+      // version for z-index cubes 
+      // std::vector<std::tuple<std::string,int,int>> ranges;
+      // Version for vtk xmin, ymin, zmin, ...
+      std::vector<std::tuple<std::string,int,int,int,int,int,int>> ranges;
     };
 
   private:
@@ -34,7 +35,7 @@ class IOQueue {
   public: 
 
     // place an item on the IO queue
-    void enqueue ( std::tuple<float,float,float> seed, std::vector<std::string> files );
+    void enqueue ( int strealine, std::tuple<float,float,float> seed, std::vector<std::tuple<std::string,int,int,int,int,int,int>> ranges );
 
     // remove an item from the IO queue
     ioqel* dequeue ( );

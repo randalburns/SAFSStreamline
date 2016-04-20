@@ -18,7 +18,7 @@ int main ()
   //  initialize the SAFS system
   config_map::ptr safs_configs = config_map::create("/safs/local.txt");
   init_io_system(safs_configs);
-  file_io_factory::shared_ptr factory = create_io_factory("ssfile",REMOTE_ACCESS);
+//  file_io_factory::shared_ptr factory = create_io_factory("ssfile",REMOTE_ACCESS);
   
 
   //Create 1000 seeds and queue them up for I/O
@@ -32,15 +32,18 @@ int main ()
     os << "file" << i;
     std::string s = os.str();
 
-    std::vector<std::string> filenames;
+    std::tuple<std::string,int,int,int,int,int,int> range1 { s, 100+i, 101+i, 102+1, 200+i, 201+i, 202+i };
+    std::tuple<std::string,int,int,int,int,int,int> range2 { s, 1000+i, 1001+i, 1002+1, 2000+i, 2001+i, 2002+i };
 
-    filenames.push_back( s );
-
-    ioq.enqueue( seed, filenames );
+    std::vector<std::tuple<std::string,int,int,int,int,int,int>> ranges = { range1, range2 }; 
+    
+    ioq.enqueue( i, seed, ranges );
   }
 
   // Look at the queue.  This is destructive
-  //ioq.printioq();
+  ioq.printioq();
+
+  return 0;
 
   // create parallel threads
   #pragma omp parallel

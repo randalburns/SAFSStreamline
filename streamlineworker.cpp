@@ -1,7 +1,9 @@
+#include <unordered_map>
 #include "ioqueue.h"
 #include "streamlineworker.h"
 
 #include "io_interface.h"
+
 using namespace safs;
 
 // class SAFSStreamline
@@ -11,16 +13,18 @@ using namespace safs;
 //
 // Once all files are read, it invokes the callback and returns a list of buffers.
 
-StreamlineWorker::StreamlineWorker ( IOQueue& ioqref ):
-  ioq(ioqref), iostatus(IODEPTH, 0), workers(IODEPTH)
+StreamlineWorker::StreamlineWorker ( IOQueue& ioqref,  file_io_factory::shared_ptr factoryp ):
+  ioq(ioqref), iostatus(IODEPTH, 0), workers(IODEPTH), factory(factoryp)
 {
-};
+  io = create_io(factory, thread::get_curr_thread());
+  io->set_callback(callback::ptr(new SSCallback(this)));
+}
 
 // Dequeue an I/O, send to FlashGraph, set up callbacks.
 void StreamlineWorker::process ( )
 {
-  IOQueue::ioqel* qel;
-  
+  IOQueue::ioqel* qel = NULL;
+
   // Loop until no more I/Os
   do {
 
@@ -42,10 +46,14 @@ void StreamlineWorker::process ( )
         wi->ioslot = ioslot;
         wi->seed = qel->seed;
         wi->ranges = qel->ranges;
-        for ( unsigned int i=0; i<wi->ranges.size(); i++ )
-        {
-          wi->buffers.push_back(NULL);
-        }
+
+        // RBTODO buffers is wrong.  We are going to have to allocate a buffer to cut data into and
+        // keep a count of I/O requests
+
+//        for ( unsigned int i=0; i<wi->ranges.size(); i++ )
+//        {
+//          wi->buffers.push_back(NULL);
+//        }
 
         // add the workitem to the workers
         workers[ioslot] = wi;
@@ -54,19 +62,31 @@ void StreamlineWorker::process ( )
         iostatus[ioslot] = 1;
 
         // create the SAFS requests
+        // This is direct I/O. Memory buffer, I/O offset and I/O size
+        // all need to be aligned to the I/O block size.
+
+        // do an experiment do a 512 aligned I/O to an mutliplied offset
+        size_t io_size = ROUNDUP_PAGE(500);
+        data_loc_t loc(factory->get_file_id(), 4096*wi->ioslot);
+        // The buffer will be free'd in the callback function.
+        char *buf = (char *) valloc(io_size);
+        io_request req(buf, loc, io_size, READ);
+        io->access(&req, 1);
+
+        // update the offset map
+        offset2ioslot.emplace(unsigned(loc.get_offset()),ioslot);
+//        offset2ioslot.insert(std::make_pair<int,int>i(loc,ioslot);
 
         // Delete the qelement
         delete (qel);
       }
-    } //endfor -- 
+    } //endfor -- IOslots full
     
-    printworkers();
- 
-    assert(0);
     // wait on I/O when an I/O is complete, restart the do loop
-
-  }
-  while ( qel != NULL );
+    io->wait4complete(1);
+    qel = NULL;
+  } 
+  while ( qel != NULL ); //end do while -- no more I/Os
 
   return;
 }
@@ -75,7 +95,7 @@ void StreamlineWorker::process ( )
 void StreamlineWorker::printworkers ( )
 {
   StreamlineWorker::workitem* wp;
- 
+
   for (unsigned int i=0; i<workers.size(); i++)
   { 
     wp = workers[i];
@@ -95,56 +115,26 @@ void StreamlineWorker::printworkers ( )
 }
 
 
+SSCallback::SSCallback ( StreamlineWorker * sw ):
+  sworker ( sw )
+{}
 
 // SAFS callback function
-int SSCallback::handleIO ( io_request *reqs[], int num )
+int SSCallback::invoke ( io_request *reqs[], int num )
 {
-  assert(0);
+  std::cout << "In callback" << std::endl;
+  for (int i = 0; i < num; i++) {
+    char *buf = reqs[i]->get_buf();
+    off_t offset = reqs[i]->get_offset();
 
-/*  //RBTODO
-  if ( moreio for workerel ) 
-  {
-     wait longer
-     return 0;
-  } else {
-    // Call JP's streamline integration
-    //     with a IOcompletion structure
-    //  JP returns a new seed and new list of files
-    if ( return_code == morework )
-    {
-      // enqueue new IO
-    }
-    else
-    {
-      streamline done.
-    }
+    int ioslot = sworker->offset2ioslot.find(offset)->first;
+    std::cout << "Offset " << offset << "corresponds to ioslot" << ioslot;
+    offset2ioslot.erase(offset);
+    sworker->iostatus[ioslot]=0;
+
+//        run_computation(buf, reqs[i]->get_size());
+    std::cout << "An I/O completed" << std::endl;
+    free(buf);
   }
-*/
+  return 0;
 }
-
-
-/*
-    // Return a seed and data for which I/O is finished.
-    workitem* dequeue ( )
-    {
-      if ( workerq.empty() )
-      {
-        return NULL;
-      } else {
-        workitem * wi = workerq.front();
-        workerq.pop();
-        return wi;
-      }
-    }
-
-    // Release complete work 
-    void complete ( workitem* wi )
-    {
-      // itereate over buffers and release
-      for (int i; i< wi->length; i++ )
-      {
-        free ( wi->buffers[i] );
-      }
-      delete ( wi );
-    }
-*/

@@ -17,10 +17,10 @@
 
 include ../Makefile.common
 
-CXXFLAGS += -g --std=c++11 -I.. -I../include -I../libcommon
-CFLAGS = -g -I.. -I../include -I../libcommon $(TRACE_FLAGS)
-LDFLAGS := -L../libsafs -lsafs -L../libcommon -lcommon $(LDFLAGS)
-LIBFILE = ../libsafs/libsafs.a ../libcommon/libcommon.a
+CXXFLAGS += -g --std=c++11 -I.. -I../include -I../libsafs
+CFLAGS = -g -I.. -I../include -I../libsafs $(TRACE_FLAGS)
+LDFLAGS := -L../libsafs -lsafs $(LDFLAGS)
+LIBFILE = ../libsafs/libsafs.a 
 
 TARGETS = ssdriver
 

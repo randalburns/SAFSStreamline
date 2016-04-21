@@ -19,7 +19,6 @@ int main ()
   config_map::ptr safs_configs = config_map::create("/safs/local.txt");
   init_io_system(safs_configs);
   file_io_factory::shared_ptr factory = create_io_factory("ssfile",REMOTE_ACCESS);
-  
 
   //Create 1000 seeds and queue them up for I/O
   for (int i=0; i<32; i++)
@@ -47,7 +46,7 @@ int main ()
   // #pragma omp parallel
   {
     // Create a streamline worker
-    StreamlineWorker sw ( ioq );
+    StreamlineWorker sw ( ioq, factory );
 
     // start the I/O and streamline update process
     sw.process ();

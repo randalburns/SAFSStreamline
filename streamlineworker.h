@@ -9,6 +9,7 @@
 #include<tuple>
 #include<queue>
 #include<array>
+#include<unordered_map>
 
 #include "ioqueue.h"
 
@@ -33,32 +34,33 @@ class StreamlineWorker {
       int streamline;
       int ioslot;
       std::tuple<float,float,float> seed;
-      std::vector<std::tuple<std::string,int,int,int,int,int,int>> ranges;
+      std::tuple<std::string,int,int,int,int,int,int> cuboid;
       std::vector<unsigned char*> buffers;
     };
 
 //    static const int IODEPTH = 64;
-    static const int IODEPTH = 2;
+    static const int IODEPTH = 8;
 
   private: 
 
-      int ioslot;
-      IOQueue& ioq;
-      std::vector<char> iostatus;
+    int ioslot;
+    IOQueue& ioq;
+    std::vector<char> iostatus;
 
-      // output queue -- lists of buffers
-      std::vector<workitem*> workers;
+    // output queue -- lists of buffers
+    std::vector<workitem*> workers;
 
-      // File I/O factory
-      file_io_factory::shared_ptr factory; 
+    // File I/O factory
+    file_io_factory::shared_ptr factory; 
 
-      // I/O interface
-      io_interface::ptr io;
-  
-      // Reverse lookup for I/O
-      std::unordered_multimap<std::string,int> offset2ioslot;  
+    // I/O interface
+    io_interface::ptr io;
 
-      std:string safs_hash_key ( file_id_t fid, off_t offset ); 
+    // Reverse lookup for I/O
+    std::unordered_multimap<std::string,int> offset2ioslot;  
+
+    // key for the unordermap to lookoup I/Os
+    std::string ioslot_key ( int fileid, int off );
 
   public: 
 

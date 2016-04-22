@@ -31,12 +31,9 @@ int main ()
     os << "file" << i;
     std::string s = os.str();
 
-    std::tuple<std::string,int,int,int,int,int,int> range1 { s, 100+i, 101+i, 102+1, 200+i, 201+i, 202+i };
-    std::tuple<std::string,int,int,int,int,int,int> range2 { s, 1000+i, 1001+i, 1002+1, 2000+i, 2001+i, 2002+i };
+    std::tuple<std::string,int,int,int,int,int,int> cuboid { s, 100+i, 101+i, 102+1, 200+i, 201+i, 202+i };
 
-    std::vector<std::tuple<std::string,int,int,int,int,int,int>> ranges = { range1, range2 }; 
-    
-    ioq.enqueue( i, seed, ranges );
+    ioq.enqueue( i, seed, cuboid );
   }
 
   // Look at the queue.  This is destructive

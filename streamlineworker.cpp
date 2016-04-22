@@ -20,6 +20,13 @@ StreamlineWorker::StreamlineWorker ( IOQueue& ioqref,  file_io_factory::shared_p
   io->set_callback(callback::ptr(new SSCallback(this)));
 }
 
+std::string StreamlineWorker::ioslot_key ( int fileid, int off )
+{
+  std::ostringstream os;
+  os << fileid << "," << off;
+  return os.str();
+}
+
 // Dequeue an I/O, send to FlashGraph, set up callbacks.
 void StreamlineWorker::process ( )
 {
@@ -45,7 +52,7 @@ void StreamlineWorker::process ( )
         wi->streamline = qel->streamline;
         wi->ioslot = ioslot;
         wi->seed = qel->seed;
-        wi->ranges = qel->ranges;
+        wi->cuboid = qel->cuboid;
 
         // RBTODO buffers is wrong.  We are going to have to allocate a buffer to cut data into and
         // keep a count of I/O requests
@@ -74,9 +81,8 @@ void StreamlineWorker::process ( )
         io->access(&req, 1);
 
         // update the offset map
-// RBTODO only update if empty.......
-        offset2ioslot.emplace(std::tuple<unsigned(loc.get_file_id()),unsigned(loc.get_offset())>,ioslot);
-//        offset2ioslot.insert(std::make_pair<int,int>i(loc,ioslot);
+        std::string s = ioslot_key (loc.get_file_id(), loc.get_offset());
+        offset2ioslot.emplace(s, ioslot);
         std::cout << "In map: Off: " << loc.get_offset() << " ioslot " << ioslot << std::endl;
 
         // Delete the qelement
@@ -101,17 +107,14 @@ void StreamlineWorker::printworkers ( )
   for (unsigned int i=0; i<workers.size(); i++)
   { 
     wp = workers[i];
-    std::cout << "Streamline " << wp->streamline << ", IOSlot " << wp->ioslot << ", Seed " << std::get<0>(wp->seed) << ", " <<  std::get<1>(wp->seed) <<  ", " << std::get<2>(wp->seed) << ", Ranges ";
-    for (unsigned int j=0; j<wp->ranges.size(); j++)
-    {
-       std::cout << ", " << std::get<0>(wp->ranges[j]) << ", "
-                 << std::get<1>(wp->ranges[j]) << ", " 
-                 << std::get<2>(wp->ranges[j]) << ", "
-                 << std::get<3>(wp->ranges[j]) << ", " 
-                 << std::get<4>(wp->ranges[j]) << ", "
-                 << std::get<5>(wp->ranges[j]) << ", " 
-                 << std::get<6>(wp->ranges[j]);
-    }
+    std::cout << "Streamline " << wp->streamline << ", IOSlot " << wp->ioslot << ", Seed " << std::get<0>(wp->seed) << ", " <<  std::get<1>(wp->seed) <<  ", " << std::get<2>(wp->seed) << ", Cuboid ";
+     std::cout << ", " << std::get<0>(wp->cuboid) << ", "
+               << std::get<1>(wp->cuboid) << ", " 
+               << std::get<2>(wp->cuboid) << ", "
+               << std::get<3>(wp->cuboid) << ", " 
+               << std::get<4>(wp->cuboid) << ", "
+               << std::get<5>(wp->cuboid) << ", " 
+               << std::get<6>(wp->cuboid);
     std::cout << std::endl;
   } 
 }
@@ -130,9 +133,11 @@ int SSCallback::invoke ( io_request *reqs[], int num )
     file_id_t fid = reqs[i]->get_file_id();
 
 // RBTODO iterate over all waiting I/Os
-    int ioslot = sworker->offset2ioslot.find(std::tuple<unsigned(fid),unsigned(offset)>)->second;
+   
+    std::string ioskey = sworker->ioslot_key(fid,offset);
+    int ioslot = sworker->offset2ioslot.find(ioskey)->second;
     std::cout << "Offset " << offset << " corresponds to ioslot " << ioslot << std::endl;
-    sworker->offset2ioslot.erase(offset);
+    sworker->offset2ioslot.erase(ioskey);
     sworker->iostatus[ioslot]=0;
 
 //        run_computation(buf, reqs[i]->get_size());

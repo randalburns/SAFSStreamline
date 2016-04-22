@@ -21,7 +21,7 @@ class IOQueue {
       // version for z-index cubes 
       // std::vector<std::tuple<std::string,int,int>> ranges;
       // Version for vtk xmin, ymin, zmin, ...
-      std::vector<std::tuple<std::string,int,int,int,int,int,int>> ranges;
+      std::tuple<std::string,int,int,int,int,int,int> cuboid;
     };
 
   private:
@@ -35,7 +35,7 @@ class IOQueue {
   public: 
 
     // place an item on the IO queue
-    void enqueue ( int strealine, std::tuple<float,float,float> seed, std::vector<std::tuple<std::string,int,int,int,int,int,int>> ranges );
+    void enqueue ( int strealine, std::tuple<float,float,float> seed, std::tuple<std::string,int,int,int,int,int,int> cuboid );
 
     // remove an item from the IO queue
     ioqel* dequeue ( );

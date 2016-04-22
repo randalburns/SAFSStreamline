@@ -1,12 +1,12 @@
 #include "ioqueue.h"
 
 // place an item on the IO queue
-void IOQueue::enqueue ( int streamline, std::tuple<float,float,float> seed, std::vector<std::tuple<std::string,int,int,int,int,int,int>> ranges )
+void IOQueue::enqueue ( int streamline, std::tuple<float,float,float> seed, std::tuple<std::string,int,int,int,int,int,int> cuboid )
 {
   IOQueue::ioqel* qel = new IOQueue::ioqel();
   qel->streamline = streamline;
   qel->seed = seed;
-  qel->ranges = ranges;
+  qel->cuboid = cuboid;
   
   q_mtx.lock();
   ioq.push ( qel );
@@ -37,17 +37,14 @@ void IOQueue::printioq ( )
   while ( not ioq.empty() )
   {
     elp = ioq.front();
-    std::cout << "Streamline " << elp->streamline << ", Seed " << std::get<0>(elp->seed) << ", " <<  std::get<1>(elp->seed) <<  ", " << std::get<2>(elp->seed) << ", Ranges ";
-    for (unsigned int i=0; i<elp->ranges.size(); i++)
-    {
-       std::cout << ", " << std::get<0>(elp->ranges[i]) << ", "
-                 << std::get<1>(elp->ranges[i]) << ", " 
-                 << std::get<2>(elp->ranges[i]) << ", "
-                 << std::get<3>(elp->ranges[i]) << ", " 
-                 << std::get<4>(elp->ranges[i]) << ", "
-                 << std::get<5>(elp->ranges[i]) << ", " 
-                 << std::get<6>(elp->ranges[i]);
-    }
+    std::cout << "Streamline " << elp->streamline << ", Seed " << std::get<0>(elp->seed) << ", " <<  std::get<1>(elp->seed) <<  ", " << std::get<2>(elp->seed) << ", Cuboid ";
+    std::cout << ", " << std::get<0>(elp->cuboid) << ", "
+              << std::get<1>(elp->cuboid) << ", " 
+              << std::get<2>(elp->cuboid) << ", "
+              << std::get<3>(elp->cuboid) << ", " 
+              << std::get<4>(elp->cuboid) << ", "
+              << std::get<5>(elp->cuboid) << ", " 
+              << std::get<6>(elp->cuboid);
     std::cout << std::endl;
 
     ioq.pop();

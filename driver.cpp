@@ -50,7 +50,7 @@ int main ()
 //    StreamlineWorker sw ( omp_get_thread_num(), ioq, NULL );
 
     // start the I/O and streamline update process
-    sw.process ();
+//    sw.process ();
   }
 }
 

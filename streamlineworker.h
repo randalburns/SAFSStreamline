@@ -56,7 +56,9 @@ class StreamlineWorker {
       io_interface::ptr io;
   
       // Reverse lookup for I/O
-      std::unordered_multimap<unsigned,int> offset2ioslot;  
+      std::unordered_multimap<std::string,int> offset2ioslot;  
+
+      std:string safs_hash_key ( file_id_t fid, off_t offset ); 
 
   public: 
 

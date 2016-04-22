@@ -74,8 +74,10 @@ void StreamlineWorker::process ( )
         io->access(&req, 1);
 
         // update the offset map
-        offset2ioslot.emplace(unsigned(loc.get_offset()),ioslot);
+// RBTODO only update if empty.......
+        offset2ioslot.emplace(std::tuple<unsigned(loc.get_file_id()),unsigned(loc.get_offset())>,ioslot);
 //        offset2ioslot.insert(std::make_pair<int,int>i(loc,ioslot);
+        std::cout << "In map: Off: " << loc.get_offset() << " ioslot " << ioslot << std::endl;
 
         // Delete the qelement
         delete (qel);
@@ -122,18 +124,18 @@ SSCallback::SSCallback ( StreamlineWorker * sw ):
 // SAFS callback function
 int SSCallback::invoke ( io_request *reqs[], int num )
 {
-  std::cout << "In callback" << std::endl;
   for (int i = 0; i < num; i++) {
     char *buf = reqs[i]->get_buf();
     off_t offset = reqs[i]->get_offset();
+    file_id_t fid = reqs[i]->get_file_id();
 
-    int ioslot = sworker->offset2ioslot.find(offset)->first;
-    std::cout << "Offset " << offset << "corresponds to ioslot" << ioslot;
-    offset2ioslot.erase(offset);
+// RBTODO iterate over all waiting I/Os
+    int ioslot = sworker->offset2ioslot.find(std::tuple<unsigned(fid),unsigned(offset)>)->second;
+    std::cout << "Offset " << offset << " corresponds to ioslot " << ioslot << std::endl;
+    sworker->offset2ioslot.erase(offset);
     sworker->iostatus[ioslot]=0;
 
 //        run_computation(buf, reqs[i]->get_size());
-    std::cout << "An I/O completed" << std::endl;
     free(buf);
   }
   return 0;

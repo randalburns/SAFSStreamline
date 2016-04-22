@@ -5,6 +5,8 @@
 #include<iostream>
 #include<sstream>
 
+#include<omp.h>
+
 #include "ioqueue.h"
 #include "streamlineworker.h"
 
@@ -18,10 +20,10 @@ int main ()
   //  initialize the SAFS system
   config_map::ptr safs_configs = config_map::create("/safs/local.txt");
   init_io_system(safs_configs);
-  file_io_factory::shared_ptr factory = create_io_factory("ssfile",REMOTE_ACCESS);
+  file_io_factory::shared_ptr factory = create_io_factory("ssfile", REMOTE_ACCESS);
 
   //Create 1000 seeds and queue them up for I/O
-  for (int i=0; i<32; i++)
+  for (int i=0; i<16; i++)
   {
     // initialize a seed
     std::tuple<double,double,double> seed { 0.1+i, 0.2+i, 0.3+i };
@@ -40,24 +42,15 @@ int main ()
   // ioq.printioq();
 
   // create parallel threads
-  // #pragma omp parallel
+  #pragma omp parallel num_threads(2)
+//  #pragma omp parallel num_threads(1)
   {
     // Create a streamline worker
-    StreamlineWorker sw ( ioq, factory );
+    StreamlineWorker sw ( omp_get_thread_num(), ioq, factory );
+//    StreamlineWorker sw ( omp_get_thread_num(), ioq, NULL );
 
     // start the I/O and streamline update process
     sw.process ();
   }
 }
 
-
-
-
-// dead text
-/*
-
-//    const char * filesp[] = { "file1", "file2", "file3", "file4" };
-    const char * filesp[] = { "file1", "file2", "file3", "file4" };
-    std::vector<std::string> filenames (filesp, std::end(filesp));
-
-*/

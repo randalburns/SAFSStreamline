@@ -43,7 +43,7 @@ class StreamlineWorker {
 
   private: 
 
-    int ioslot;
+    int wid;
     IOQueue& ioq;
     std::vector<char> iostatus;
 
@@ -64,7 +64,7 @@ class StreamlineWorker {
 
   public: 
 
-    StreamlineWorker ( IOQueue& ioqref, file_io_factory::shared_ptr factoryp );
+    StreamlineWorker ( int workerid, IOQueue& ioqref, file_io_factory::shared_ptr factoryp );
 
     // Start IODEPTH number of workers
     // Dequeue an I/O, send to FlashGraph, set up callbacks.

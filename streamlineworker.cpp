@@ -13,8 +13,8 @@ using namespace safs;
 //
 // Once all files are read, it invokes the callback and returns a list of buffers.
 
-StreamlineWorker::StreamlineWorker ( IOQueue& ioqref,  file_io_factory::shared_ptr factoryp ):
-  ioq(ioqref), iostatus(IODEPTH, 0), workers(IODEPTH), factory(factoryp)
+StreamlineWorker::StreamlineWorker ( int workerid, IOQueue& ioqref,  file_io_factory::shared_ptr factoryp ):
+  wid(workerid), ioq(ioqref), iostatus(IODEPTH, 0), workers(IODEPTH), factory(factoryp)
 {
   io = create_io(factory, thread::get_curr_thread());
   io->set_callback(callback::ptr(new SSCallback(this)));
@@ -83,7 +83,7 @@ void StreamlineWorker::process ( )
         // update the offset map
         std::string s = ioslot_key (loc.get_file_id(), loc.get_offset());
         offset2ioslot.emplace(s, ioslot);
-        std::cout << "In map: Off: " << loc.get_offset() << " ioslot " << ioslot << std::endl;
+        std::cout << "Request: thread=" << wid << " streamline=" << wi->streamline << ", Off=" << loc.get_offset() << ", ioslot=" << ioslot << std::endl;
 
         // Delete the qelement
         delete (qel);
@@ -92,7 +92,6 @@ void StreamlineWorker::process ( )
     
     // wait on I/O when an I/O is complete, restart the do loop
     io->wait4complete(1);
-    qel = NULL;
   } 
   while ( qel != NULL ); //end do while -- no more I/Os
 
@@ -136,7 +135,7 @@ int SSCallback::invoke ( io_request *reqs[], int num )
    
     std::string ioskey = sworker->ioslot_key(fid,offset);
     int ioslot = sworker->offset2ioslot.find(ioskey)->second;
-    std::cout << "Offset " << offset << " corresponds to ioslot " << ioslot << std::endl;
+    std::cout << "Callback Thread " << sworker->wid << "Offset " << offset << " corresponds to ioslot " << ioslot << std::endl;
     sworker->offset2ioslot.erase(ioskey);
     sworker->iostatus[ioslot]=0;
 
